@@ -1,4 +1,4 @@
-module github.com/kentakki416/go_todo_ap
+module github.com/kentakki416/go_todo_app
 
 go 1.18
 
