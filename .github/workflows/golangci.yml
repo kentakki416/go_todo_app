@@ -13,8 +13,8 @@ jobs:
         uses: actions/checkout@v3
       - name: golangci-lint
         uses: reviewdog/action-golangci-lint@v2
-        with: 
+        with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          golancgi_lint_flags: "--config=./.golancci.yml ./..."
+          golangci_lint_flags: "--config=./.golangci.yml ./..."
           fail_on_error: true
           reporter: "github-pr-review"
