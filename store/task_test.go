@@ -75,6 +75,8 @@ func TestRepository_ListTasks(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if d := cmp.Diff(gots, wants); len(d) != 0 {
+		t.Errorf("wants: %v", wants)
+		t.Errorf("gots: %v", gots)
 		t.Errorf("differs: (-got +want)\n%s", d)
 	}
 }
