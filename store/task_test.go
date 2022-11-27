@@ -12,26 +12,6 @@ import (
 	"github.com/kentakki416/go_todo_app/testutil"
 )
 
-func TestRepository_ListTasks(t *testing.T) {
-	ctx := context.Background()
-
-	tx, err := testutil.OpenDBForTest(t).BeginTxx(ctx, nil)
-	t.Cleanup(func() { _ = tx.Rollback() })
-	if err != nil {
-		t.Fatal(err)
-	}
-	wants := prepareTasks(ctx, t, tx)
-
-	sut := &Repository{}
-	gots, err := sut.ListTasks(ctx, tx)
-	if err != nil {
-		t.Fatalf("unexected error: %v", err)
-	}
-	if d := cmp.Diff(gots, wants); len(d) != 0 {
-		t.Errorf("differs: (-got +want)\n%s", d)
-	}
-}
-
 func prepareTasks(ctx context.Context, t *testing.T, con Execer) entity.Tasks {
 	t.Helper()
 	// 一度きれいにしておく
@@ -76,6 +56,29 @@ func prepareTasks(ctx context.Context, t *testing.T, con Execer) entity.Tasks {
 	return wants
 }
 
+func TestRepository_ListTasks(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	// entity.Taskを作成する他のテストケースと混ざるとテストがフェイルする。
+	// そのため、トランザクションをはることでこのテストケースの中だけのテーブル状態にする。
+	tx, err := testutil.OpenDBForTest(t).BeginTxx(ctx, nil)
+	// このテストケースが完了したらもとに戻す
+	t.Cleanup(func() { _ = tx.Rollback() })
+	if err != nil {
+		t.Fatal(err)
+	}
+	wants := prepareTasks(ctx, t, tx)
+
+	sut := &Repository{}
+	gots, err := sut.ListTasks(ctx, tx)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if d := cmp.Diff(gots, wants); len(d) != 0 {
+		t.Errorf("differs: (-got +want)\n%s", d)
+	}
+}
+
 func TestRepository_AddTask(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
@@ -93,9 +96,10 @@ func TestRepository_AddTask(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { db.Close() })
+	t.Cleanup(func() { _ = db.Close() })
 	mock.ExpectExec(
-		`INSERT INTO task \(title, status, created, modified\) VALUES \(\?,\?,\,?\?\)`,
+		// エスケープが必要
+		`INSERT INTO task \(title, status, created, modified\) VALUES \(\?, \?, \?, \?\)`,
 	).WithArgs(okTask.Title, okTask.Status, c.Now(), c.Now()).
 		WillReturnResult(sqlmock.NewResult(wantID, 1))
 
