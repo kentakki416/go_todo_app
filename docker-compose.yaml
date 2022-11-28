@@ -1,4 +1,5 @@
 version: "3.9"
+# ref: https://docs.docker.com/compose/compose-file
 services:
   app:
     image: gotodo
@@ -10,13 +11,15 @@ services:
       PORT: 8080
       TODO_DB_HOST: todo-db
       TODO_DB_PORT: 3306
+      TODO_DB_USER: todo
       TODO_DB_PASSWORD: todo
-      TODO_DB_DATABASE: todo
+      TODO_DB_NAME: todo
     volumes:
       - .:/app
     ports:
       - "18000:8080"
-
+    links:
+      - todo-db
   todo-db:
     image: mysql:8.0.29
     platform: linux/amd64
@@ -31,6 +34,5 @@ services:
       - $PWD/_tools/mysql/conf.d:/etc/mysql/conf.d:cached
     ports:
       - "33306:3306"
-
 volumes:
   todo-db-data:
